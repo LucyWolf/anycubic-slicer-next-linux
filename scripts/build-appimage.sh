@@ -85,6 +85,18 @@ done
 true
 echo "Bundled $(ls "$APPDIR/lib" | wc -l) shared libraries"
 
+# WebKitGTK spawns separate helper process binaries (WebKitNetworkProcess,
+# WebKitWebProcess, ...) at a hardcoded system path — ldd never sees these
+# since they're fork+exec'd, not dynamically linked. Bundle that whole
+# directory too; AppRun points WebKit at it via WEBKIT_EXEC_PATH.
+WEBKIT_HELPERS_SRC="/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+if [ -d "$WEBKIT_HELPERS_SRC" ]; then
+  echo "==> Bundling WebKitGTK helper processes"
+  cp -a "$WEBKIT_HELPERS_SRC" "$APPDIR/lib/webkit2gtk-4.1"
+else
+  echo "WARNING: $WEBKIT_HELPERS_SRC not found, WebKit will likely fail to spawn its helper processes" >&2
+fi
+
 ICON_SRC="$APPDIR/resources/images/AnycubicSlicer.png"
 ICON_DST="$APPDIR/share/icons/hicolor/256x256/apps/AnycubicSlicer.png"
 if [ -f "$ICON_SRC" ]; then
@@ -111,6 +123,10 @@ export LD_LIBRARY_PATH="$DIR/lib:$DIR/bin:$LD_LIBRARY_PATH"
 export LC_ALL=C
 
 export ANYCUBIC_RESOURCES_PATH="$DIR/resources"
+
+# Tell WebKitGTK where to find its bundled helper process binaries
+# (WebKitNetworkProcess etc.) instead of looking at the hardcoded system path.
+export WEBKIT_EXEC_PATH="$DIR/lib/webkit2gtk-4.1"
 
 # WebKit rendering fixes
 export WEBKIT_DISABLE_DMABUF_RENDERER=1

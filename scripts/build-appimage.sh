@@ -93,6 +93,8 @@ chmod +x "$APPIMAGETOOL"
 echo "==> Building AppImage"
 export VERSION="$VERSION"
 export ARCH=x86_64
-"$APPIMAGETOOL" --no-appstream "$APPDIR" "$DIST/AnycubicSlicerNext-x86_64.AppImage"
+# CI runners have no FUSE, and appimagetool is itself an AppImage —
+# --appimage-extract-and-run avoids needing to mount it.
+"$APPIMAGETOOL" --appimage-extract-and-run --no-appstream "$APPDIR" "$DIST/AnycubicSlicerNext-x86_64.AppImage"
 
 echo "Built: $DIST/AnycubicSlicerNext-x86_64.AppImage"

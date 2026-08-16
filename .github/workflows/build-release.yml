@@ -41,6 +41,8 @@ jobs:
         run: |
           gh release create "${{ steps.check.outputs.tag }}" \
             dist/AnycubicSlicerNext-linux-x86_64.tar.gz \
+            AnycubicSlicerNext-installer.desktop \
+            install.sh \
             --repo "${{ github.repository }}" \
             --title "AnycubicSlicerNext ${{ steps.check.outputs.version }} (build ${{ steps.check.outputs.build_id }})" \
             --notes "Automated repackage of Anycubic's official .deb, bundled with compatible libicu74/libselinux1 for non-Ubuntu distros (Arch/CachyOS etc.). Same process as the anycubicslicernext-bin AUR package.

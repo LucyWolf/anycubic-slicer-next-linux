@@ -30,9 +30,9 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build AppImage
+      - name: Build package
         if: steps.exists.outputs.exists == 'false'
-        run: ./scripts/build-appimage.sh
+        run: ./scripts/build-package.sh
 
       - name: Create release
         if: steps.exists.outputs.exists == 'false'
@@ -40,13 +40,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ steps.check.outputs.tag }}" \
-            dist/AnycubicSlicerNext-x86_64.AppImage \
+            dist/AnycubicSlicerNext-linux-x86_64.tar.gz \
+            AnycubicSlicerNext-deb-installer.desktop \
+            AnycubicSlicerNext-arch-installer.desktop \
             AnycubicSlicerNext-installer.desktop \
+            install-deb.sh \
+            install-arch.sh \
             install.sh \
             --repo "${{ github.repository }}" \
             --title "AnycubicSlicerNext ${{ steps.check.outputs.version }} (build ${{ steps.check.outputs.build_id }})" \
-            --notes "Self-contained AppImage — no sudo, no system packages touched. Double-click \`AnycubicSlicerNext-installer.desktop\` to install, or run \`install.sh\` directly.
-
-          Same build approach as thecalamityjoe87/anycubic-slicer-next-packages, wired into this repo's own auto-update pipeline.
+            --notes "Pick the double-click installer for your distro:
+          - **Debian/Ubuntu/Mint:** \`AnycubicSlicerNext-deb-installer.desktop\` — installs Anycubic's official .deb directly via apt, no repack needed there.
+          - **Arch/CachyOS/Manjaro:** \`AnycubicSlicerNext-arch-installer.desktop\` — installs this repo's repack (Anycubic's official .deb bundled with the older libicu74/libselinux1 it needs, same fix as the anycubicslicernext-bin AUR package).
+          - **Anything else (Fedora, openSUSE, ...):** \`AnycubicSlicerNext-installer.desktop\` — auto-detects apt/pacman and delegates to one of the above; says so honestly if neither is found.
 
           **Upstream source:** Anycubic Slicer Next v${{ steps.check.outputs.version }}, build ${{ steps.check.outputs.build_id }} (Ubuntu 24.04 .deb from cdn-universe-slicer.anycubic.com)."

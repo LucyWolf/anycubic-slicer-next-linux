@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Anycubic Slicer Next installieren (Arch/CachyOS/Manjaro)
+Comment=Anycubic Slicer Next herunterladen und installieren
+Icon=system-software-install
+Exec=bash -c "curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install-arch.sh -o /tmp/install-arch.sh && bash /tmp/install-arch.sh; echo; read -p 'Fertig — Enter zum Schliessen...'"
+Terminal=true
+Categories=Utility;

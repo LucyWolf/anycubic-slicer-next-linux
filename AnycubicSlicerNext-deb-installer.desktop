@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Anycubic Slicer Next installieren (Debian/Ubuntu/Mint)
+Comment=Anycubic Slicer Next herunterladen und installieren
+Icon=system-software-install
+Exec=bash -c "curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install-deb.sh -o /tmp/install-deb.sh && bash /tmp/install-deb.sh; echo; read -p 'Fertig — Enter zum Schliessen...'"
+Terminal=true
+Categories=Utility;

@@ -11,7 +11,11 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 echo "==> Installing system dependencies (sudo required)"
-sudo pacman -S --needed --noconfirm webkit2gtk-4.1 libxml2-legacy libbsd gtk3 zlib wayland \
+# zlib deliberately not listed here: forcing it via -S conflicts with
+# zlib-ng-compat, which several users (incl. performance-tuned setups) have
+# installed instead — it provides the same libz.so, so the app's actual
+# runtime need is already met either way.
+sudo pacman -S --needed --noconfirm webkit2gtk-4.1 libxml2-legacy libbsd gtk3 wayland \
   libglvnd gst-plugins-base gst-plugins-good gst-libav dbus libsoup3 noto-fonts noto-fonts-cjk
 
 echo "==> Downloading latest build"

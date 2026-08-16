@@ -2,6 +2,6 @@
 Type=Application
 Name=Anycubic Slicer Next installieren
 Icon=system-software-install
-Exec=bash -c "curl -fsSL https://raw.githubusercontent.com/lucy-wolf/anycubic-slicer-next-linux/main/install.sh | bash"
+Exec=bash -c "curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install.sh | bash"
 Terminal=true
 Categories=Utility;

@@ -38,7 +38,7 @@ Then either:
   allow launching the first time if your file manager asks), or
 - **Run manually:**
   ```bash
-  curl -fsSL https://raw.githubusercontent.com/lucy-wolf/anycubic-slicer-next-linux/main/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install.sh | bash
   ```
 
 Installs to `/opt/AnycubicSlicerNext`, launcher symlinked to

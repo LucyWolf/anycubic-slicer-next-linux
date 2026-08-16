@@ -3,7 +3,7 @@
 # Self-sufficient: safe to run from anywhere, always fetches the current release.
 set -euo pipefail
 
-REPO="lucy-wolf/anycubic-slicer-next-linux" # TODO: adjust if you rename/fork
+REPO="LucyWolf/anycubic-slicer-next-linux" # TODO: adjust if you rename/fork
 RELEASE_URL="https://github.com/${REPO}/releases/latest/download/AnycubicSlicerNext-linux-x86_64.tar.gz"
 INSTALL_PATH="/opt/AnycubicSlicerNext"
 TMP="$(mktemp -d)"

@@ -30,7 +30,12 @@ modules:
     # straight copy, no further patching needed here.
     build-commands:
       - mkdir -p /app/share/applications
-      - cp -a bin lib share AnycubicSlicerNext.sh /app/
+      - cp -a bin lib share /app/
+      # 'command:' below is resolved on $PATH inside the sandbox (/app/bin),
+      # not /app itself, so the wrapper has to live in bin/ alongside the
+      # real binary rather than at the AnycubicSlicerNext.sh source's own
+      # top-level position.
+      - install -Dm755 AnycubicSlicerNext.sh /app/bin/AnycubicSlicerNext.sh
       - mv /app/share/applications/AnycubicSlicer.desktop
         /app/share/applications/io.github.lucywolf.AnycubicSlicerNext.desktop
     sources:

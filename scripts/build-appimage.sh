@@ -49,6 +49,22 @@ cp -a "$EXTRACT_DIR/usr/share/AnycubicSlicerNext/resources" "$APPDIR/"
 mkdir -p "$APPDIR/share/applications" "$APPDIR/share/icons/hicolor/256x256/apps"
 chmod +x "$APPDIR/bin/AnycubicSlicerNext" || true
 
+# The .deb only bundles the app's own private libs — webkit2gtk-4.1 and the
+# rest of its dependency tree are declared as system Depends, not shipped.
+# Install them on this disposable CI runner (never touches an end user's
+# system) and use ldd's fully resolved list to copy every shared library
+# the binary actually needs into the AppImage, so it's truly self-contained.
+echo "==> Installing webkit2gtk-4.1 + deps on the CI runner to bundle them"
+sudo apt-get update -qq
+sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-0 libxml2 >/dev/null
+
+echo "==> Resolving full shared library dependency tree via ldd"
+LD_LIBRARY_PATH="$APPDIR/lib" ldd "$APPDIR/bin/AnycubicSlicerNext" \
+  | awk '{print $3}' | grep '^/' | sort -u | while read -r lib; do
+    cp -Ln "$lib" "$APPDIR/lib/" 2>/dev/null || true
+  done
+echo "Bundled $(ls "$APPDIR/lib" | wc -l) shared libraries"
+
 ICON_SRC="$APPDIR/resources/images/AnycubicSlicer.png"
 ICON_DST="$APPDIR/share/icons/hicolor/256x256/apps/AnycubicSlicer.png"
 if [ -f "$ICON_SRC" ]; then

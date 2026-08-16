@@ -1,0 +1,48 @@
+name: Check upstream and release
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check upstream build id
+        id: check
+        run: |
+          TAG="$(./scripts/check-version.sh)"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Upstream tag: $TAG"
+
+      - name: Check whether this tag was already released
+        id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.check.outputs.tag }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build package
+        if: steps.exists.outputs.exists == 'false'
+        run: ./scripts/build-package.sh
+
+      - name: Create release
+        if: steps.exists.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.check.outputs.tag }}" \
+            dist/AnycubicSlicerNext-linux-x86_64.tar.gz \
+            --repo "${{ github.repository }}" \
+            --title "AnycubicSlicerNext ${{ steps.check.outputs.tag }}" \
+            --notes "Automated repackage of Anycubic's official .deb, bundled with compatible libicu74/libselinux1 for non-Ubuntu distros (Arch/CachyOS etc.). Built by this repo's CI, same process as the anycubicslicernext-bin AUR package."

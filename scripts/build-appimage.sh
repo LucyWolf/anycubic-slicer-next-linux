@@ -59,10 +59,23 @@ sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-0 libxml2 >/dev/null
 
 echo "==> Resolving full shared library dependency tree via ldd"
+# Core glibc libraries must NEVER be bundled — they have to match the host's
+# dynamic linker (ld.so) exactly, or symbol lookups fail at runtime
+# (e.g. "undefined symbol: __nptl_change_stack_perm, version GLIBC_PRIVATE"
+# when a bundled Ubuntu libc.so.6 gets loaded by a different distro's ld.so).
+# These always come from the target system instead.
+GLIBC_EXCLUDE_REGEX='^(ld-linux|ld-linux-x86-64|libc|libm|libpthread|libdl|librt|libresolv|libnsl|libutil|libnss_)\.so'
 LD_LIBRARY_PATH="$APPDIR/lib" ldd "$APPDIR/bin/AnycubicSlicerNext" \
   | awk '{print $3}' | grep '^/' | sort -u | while read -r lib; do
+    basename "$lib" | grep -qE "$GLIBC_EXCLUDE_REGEX" && continue
     cp -Ln "$lib" "$APPDIR/lib/" 2>/dev/null || true
   done
+
+# Also strip any glibc libs the .deb itself may have shipped in its own
+# usr/lib (belt and braces — same reasoning as above).
+find "$APPDIR/lib" -maxdepth 1 -type f | while read -r lib; do
+  basename "$lib" | grep -qE "$GLIBC_EXCLUDE_REGEX" && rm -f "$lib"
+done
 echo "Bundled $(ls "$APPDIR/lib" | wc -l) shared libraries"
 
 ICON_SRC="$APPDIR/resources/images/AnycubicSlicer.png"

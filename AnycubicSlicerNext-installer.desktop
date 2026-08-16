@@ -3,6 +3,6 @@ Type=Application
 Name=Anycubic Slicer Next installieren
 Comment=Anycubic Slicer Next herunterladen und installieren
 Icon=system-software-install
-Exec=bash -c "curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install.sh | bash"
+Exec=bash -c "curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install.sh -o /tmp/install.sh && bash /tmp/install.sh; echo; read -p 'Fertig — Enter zum Schliessen...'"
 Terminal=true
 Categories=Utility;

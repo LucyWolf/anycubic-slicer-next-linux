@@ -12,15 +12,13 @@ trap 'rm -rf "$TMP"' EXIT
 
 echo "==> Installing system dependencies (sudo required)"
 # webkit2gtk-4.1, libxml2-legacy and gst-plugins-good hard-depend on the
-# real 'zlib' package. zlib-ng-compat (a common performance swap-in) is not
-# accepted as a substitute by pacman's dependency resolver and conflicts
-# with it, so if it's installed it has to be swapped back to plain zlib
-# first, or the whole transaction aborts.
-if pacman -Qi zlib-ng-compat &>/dev/null; then
-  echo "    Found zlib-ng-compat, which conflicts with zlib (required by webkit2gtk-4.1/libxml2-legacy/gst-plugins-good) — swapping it back to zlib"
-  sudo pacman -Rdd --noconfirm zlib-ng-compat
-fi
-sudo pacman -S --needed --noconfirm webkit2gtk-4.1 libxml2-legacy libbsd gtk3 zlib wayland \
+# real 'zlib' package. If zlib-ng-compat (a common performance swap-in) is
+# installed instead, pacman will ask to remove it as part of resolving
+# this single transaction — answered via the 'yes' pipe so it happens
+# atomically (remove-old + install-new in one pacman transaction), instead
+# of ever running as two separate commands with a broken window in between
+# where libz.so.1 would be missing and sudo/pacman themselves stop working.
+yes | sudo pacman -S --needed webkit2gtk-4.1 libxml2-legacy libbsd gtk3 zlib wayland \
   libglvnd gst-plugins-base gst-plugins-good gst-libav dbus libsoup3 noto-fonts noto-fonts-cjk
 
 echo "==> Downloading latest build"

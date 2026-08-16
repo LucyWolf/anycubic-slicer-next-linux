@@ -12,7 +12,14 @@ finish-args:
   - --share=network
   - --share=ipc
   - --socket=wayland
+  # Only exposed if no Wayland session is present at runtime (checked via
+  # WAYLAND_DISPLAY) — not a blanket X11 grant even on a Wayland desktop.
   - --socket=fallback-x11
+  # GDK auto-detection isn't reliably Wayland-first for every app; force the
+  # preference explicitly. Still degrades to X11 (via XWayland, permitted by
+  # fallback-x11 above) if Wayland genuinely isn't available, rather than
+  # failing outright.
+  - --env=GDK_BACKEND=wayland,x11
   # GPU accel for the 3D viewport, plus USB-serial access for printers that
   # use direct USB rather than network (same reasoning PrusaSlicer's flatpak
   # uses --device=all for).

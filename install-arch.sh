@@ -1,6 +1,7 @@
 #!/bin/bash
-# Installs the latest repackaged AnycubicSlicerNext build to /opt.
-# Self-sufficient: safe to run from anywhere, always fetches the current release.
+# Installs the latest repackaged AnycubicSlicerNext build to /opt on
+# Arch/CachyOS/Manjaro. Self-sufficient: safe to run from anywhere, always
+# fetches the current release.
 set -euo pipefail
 
 REPO="LucyWolf/anycubic-slicer-next-linux" # TODO: adjust if you rename/fork
@@ -8,6 +9,10 @@ RELEASE_URL="https://github.com/${REPO}/releases/latest/download/AnycubicSlicerN
 INSTALL_PATH="/opt/AnycubicSlicerNext"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+
+echo "==> Installing system dependencies (sudo required)"
+sudo pacman -S --needed --noconfirm webkit2gtk-4.1 libxml2-legacy libbsd gtk3 zlib wayland \
+  libglvnd gst-plugins-base gst-plugins-good gst-libav dbus libsoup3 noto-fonts noto-fonts-cjk
 
 echo "==> Downloading latest build"
 curl -fL "$RELEASE_URL" -o "$TMP/AnycubicSlicerNext.tar.gz"

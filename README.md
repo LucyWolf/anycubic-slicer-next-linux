@@ -15,32 +15,39 @@ Anycubic only ships an official `.deb` built for Ubuntu 24.04.
 A GitHub Actions workflow checks Anycubic's package feed daily
 (`.github/workflows/build-release.yml`) and publishes a new
 [Release](../../releases) automatically whenever they ship a new build —
-both installers below always pull whatever is current.
+all installers below always pull whatever is current.
 
 ## Install
 
 Download the installer for your distro and double-click it (right-click →
-allow launching the first time if your file manager asks). Both are
+allow launching the first time if your file manager asks). All are
 self-contained: they install system dependencies, download the current
 Anycubic build, and install it — no manual terminal steps needed beyond
 confirming the sudo password prompt.
 
 | Distro | Download |
 |---|---|
-| Debian / Ubuntu / Mint | [`AnycubicSlicerNext-deb-installer.desktop`](../../releases/latest/download/AnycubicSlicerNext-deb-installer.desktop) |
+| Debian / Ubuntu (and derivatives) | [`AnycubicSlicerNext-deb-installer.desktop`](../../releases/latest/download/AnycubicSlicerNext-deb-installer.desktop) |
 | Arch / CachyOS / Manjaro | [`AnycubicSlicerNext-arch-installer.desktop`](../../releases/latest/download/AnycubicSlicerNext-arch-installer.desktop) |
+| Anything else (Fedora, openSUSE, ...) | [`AnycubicSlicerNext-installer.desktop`](../../releases/latest/download/AnycubicSlicerNext-installer.desktop) |
 
 The Debian/Ubuntu installer installs Anycubic's official `.deb` via `apt`,
 no repack involved. The Arch installer installs this repo's repack (bundled
-compat libs) to `/opt/AnycubicSlicerNext`.
+compat libs) to `/opt/AnycubicSlicerNext`. The third one auto-detects
+`apt`/`pacman` and delegates to one of the above; on distros with neither
+(Fedora/openSUSE) it says so honestly instead of pretending to be tested
+there — see `install.sh`.
 
 Or run the matching script directly instead of double-clicking:
 ```bash
+# Debian/Ubuntu/Mint
+curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install-deb.sh | bash
+
 # Arch/CachyOS/Manjaro
 curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install-arch.sh | bash
 
-# Debian/Ubuntu/Mint
-curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install-deb.sh | bash
+# Auto-detect
+curl -fsSL https://raw.githubusercontent.com/LucyWolf/anycubic-slicer-next-linux/main/install.sh | bash
 ```
 
 ## Updating

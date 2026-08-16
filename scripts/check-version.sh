@@ -20,7 +20,7 @@ FILENAME="$(echo "$PACKAGES" | awk '/^Package: anycubicslicernext$/{f=1} f && /^
 
 # Filename looks like: dists/noble/main/binary-amd64/develop_AnycubicSlicerNext-1.3.96_20260319_224609-Ubuntu_24_04_3_LTS.deb
 BASENAME="$(basename "$FILENAME")"
-BUILD_ID="$(echo "$BASENAME" | grep -oE '[0-9]+_[0-9]+' | head -1)"
+BUILD_ID="$(echo "$BASENAME" | grep -oE '[0-9]{8}_[0-9]{6}' | head -1)"
 
 if [ -z "$VERSION" ] || [ -z "$BUILD_ID" ]; then
   echo "Could not parse version/build id from upstream Packages file (version='$VERSION' filename='$BASENAME')" >&2

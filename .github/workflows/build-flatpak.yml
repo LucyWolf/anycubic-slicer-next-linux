@@ -46,6 +46,21 @@ jobs:
           fi
         continue-on-error: true
 
+      - name: Debug backtrace if the smoke test crashed
+        if: env.smoke_test == 'fail'
+        run: |
+          sudo apt-get install -y gdb
+          cat > /tmp/dbg.sh << 'EOF'
+          #!/bin/bash
+          export LD_LIBRARY_PATH=/app/lib:$LD_LIBRARY_PATH
+          exec gdb -batch -ex run -ex "bt full" -ex quit --args /app/bin/AnycubicSlicerNext
+          EOF
+          chmod +x /tmp/dbg.sh
+          dbus-run-session -- xvfb-run -a \
+            flatpak run --command=bash --devel io.github.lucywolf.AnycubicSlicerNext -c /tmp/dbg.sh \
+            2>&1 | tail -150
+        continue-on-error: true
+
       - name: Fail job if smoke test failed
         if: env.smoke_test != 'pass'
         run: |

@@ -15,7 +15,7 @@ jobs:
       - name: Install flatpak + flatpak-builder
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder xvfb gettext-base
+          sudo apt-get install -y flatpak flatpak-builder xvfb xauth dbus-x11 gettext-base
           flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
 
       - name: Build flatpak bundle
@@ -28,19 +28,22 @@ jobs:
       - name: Headless smoke test (does it start without the icu/selinux crash?)
         run: |
           set +e
-          xvfb-run -a flatpak run --user io.github.lucywolf.AnycubicSlicerNext > run.log 2>&1 &
-          APP_PID=$!
-          sleep 15
-          if kill -0 "$APP_PID" 2>/dev/null; then
-            echo "OK: still running after 15s, killing for cleanup."
-            kill "$APP_PID"
-            echo "smoke_test=pass" >> "$GITHUB_ENV"
-          else
-            echo "Process exited early — see log below."
-            echo "smoke_test=fail" >> "$GITHUB_ENV"
-          fi
+          # Run in the foreground under 'timeout' rather than backgrounding +
+          # kill -0 — much more reliable output capture. Exit code 124 means
+          # 'timeout' had to kill it, i.e. it was still alive/healthy after
+          # 15s. Any other exit code means it crashed or exited on its own.
+          dbus-run-session -- xvfb-run -a timeout 15 flatpak run --user io.github.lucywolf.AnycubicSlicerNext > run.log 2>&1
+          rc=$?
           echo "----- run.log -----"
           cat run.log
+          echo "----- exit code: $rc -----"
+          if [ "$rc" -eq 124 ]; then
+            echo "OK: still running when the 15s timeout fired — no early crash."
+            echo "smoke_test=pass" >> "$GITHUB_ENV"
+          else
+            echo "Exited on its own with code $rc before the timeout — treating as failure."
+            echo "smoke_test=fail" >> "$GITHUB_ENV"
+          fi
         continue-on-error: true
 
       - name: Fail job if smoke test failed

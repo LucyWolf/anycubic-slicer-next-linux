@@ -71,7 +71,13 @@ jobs:
           exit 1
 
       - name: Upload flatpak bundle
+        # Always upload the built bundle, even if the headless CI smoke test
+        # failed — that failure may just be a software-rendering/no-GPU
+        # artifact of this runner, not proof the bundle is actually broken
+        # on real hardware. Let a human/real desktop be the final judge.
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: AnycubicSlicerNext-flatpak
           path: dist/AnycubicSlicerNext.flatpak
+          if-no-files-found: ignore

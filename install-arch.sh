@@ -11,14 +11,36 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 echo "==> Installing system dependencies (sudo required)"
-# webkit2gtk-4.1, libxml2-legacy and gst-plugins-good hard-depend on the
-# real 'zlib' package. If zlib-ng-compat (a common performance swap-in) is
-# installed instead, pacman will ask to remove it as part of resolving
-# this single transaction — answered via the 'yes' pipe so it happens
-# atomically (remove-old + install-new in one pacman transaction), instead
-# of ever running as two separate commands with a broken window in between
-# where libz.so.1 would be missing and sudo/pacman themselves stop working.
-yes | sudo pacman -S --needed webkit2gtk-4.1 libxml2-legacy libbsd gtk3 zlib wayland \
+
+# webkit2gtk-4.1, libxml2-legacy and gst-plugins-good need a newer 'zlib'
+# than zlib-ng-compat (CachyOS's default zlib provider) declares itself
+# providing. Swapping it is done as its OWN isolated pacman transaction
+# first — bundling it together with installing 3 new packages at once
+# made pacman's solver give up with "unresolvable conflicts" on a system
+# where 100+ packages depend on zlib-ng-compat (sudo, gcc, plasma-workspace,
+# ...), since that combined transaction is too complex for it to reason
+# about safely. A plain, isolated 'zlib' swap is a well-supported pacman
+# operation on its own.
+if pacman -Qi zlib-ng-compat &>/dev/null; then
+  echo "    Swapping zlib-ng-compat -> zlib (isolated step)"
+  yes | sudo pacman -S --needed zlib
+
+  # Hard safety check: if sudo/pacman broke, STOP here immediately rather
+  # than continuing into more steps that would also fail confusingly.
+  if ! sudo -n true 2>/dev/null && ! sudo -v; then
+    echo "ERROR: sudo is not working after the zlib swap. Stopping here —" >&2
+    echo "do not close this window, get help before doing anything else." >&2
+    exit 1
+  fi
+  if ! pacman --version >/dev/null 2>&1; then
+    echo "ERROR: pacman is not working after the zlib swap. Stopping here —" >&2
+    echo "do not close this window, get help before doing anything else." >&2
+    exit 1
+  fi
+  echo "    zlib swap OK, sudo/pacman still working"
+fi
+
+sudo pacman -S --needed --noconfirm webkit2gtk-4.1 libxml2-legacy libbsd gtk3 zlib wayland \
   libglvnd gst-plugins-base gst-plugins-good gst-libav dbus libsoup3 noto-fonts noto-fonts-cjk
 
 echo "==> Downloading latest build"

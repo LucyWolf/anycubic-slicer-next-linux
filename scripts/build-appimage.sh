@@ -65,17 +65,24 @@ echo "==> Resolving full shared library dependency tree via ldd"
 # when a bundled Ubuntu libc.so.6 gets loaded by a different distro's ld.so).
 # These always come from the target system instead.
 GLIBC_EXCLUDE_REGEX='^(ld-linux|ld-linux-x86-64|libc|libm|libpthread|libdl|librt|libresolv|libnsl|libutil|libnss_)\.so'
-LD_LIBRARY_PATH="$APPDIR/lib" ldd "$APPDIR/bin/AnycubicSlicerNext" \
-  | awk '{print $3}' | grep '^/' | sort -u | while read -r lib; do
-    basename "$lib" | grep -qE "$GLIBC_EXCLUDE_REGEX" && continue
+LDD_OUTPUT="$(LD_LIBRARY_PATH="$APPDIR/lib" ldd "$APPDIR/bin/AnycubicSlicerNext" 2>&1)" || true
+echo "$LDD_OUTPUT"
+echo "$LDD_OUTPUT" | awk '{print $3}' | grep '^/' | sort -u | while read -r lib; do
+    if basename "$lib" | grep -qE "$GLIBC_EXCLUDE_REGEX"; then
+      continue
+    fi
     cp -Ln "$lib" "$APPDIR/lib/" 2>/dev/null || true
   done
+true
 
 # Also strip any glibc libs the .deb itself may have shipped in its own
 # usr/lib (belt and braces — same reasoning as above).
 find "$APPDIR/lib" -maxdepth 1 -type f | while read -r lib; do
-  basename "$lib" | grep -qE "$GLIBC_EXCLUDE_REGEX" && rm -f "$lib"
+  if basename "$lib" | grep -qE "$GLIBC_EXCLUDE_REGEX"; then
+    rm -f "$lib"
+  fi
 done
+true
 echo "Bundled $(ls "$APPDIR/lib" | wc -l) shared libraries"
 
 ICON_SRC="$APPDIR/resources/images/AnycubicSlicer.png"

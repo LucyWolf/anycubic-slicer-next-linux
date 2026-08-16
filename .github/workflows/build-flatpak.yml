@@ -50,14 +50,17 @@ jobs:
         if: env.smoke_test == 'fail'
         run: |
           sudo apt-get install -y gdb
-          cat > /tmp/dbg.sh << 'EOF'
+          # /tmp is a private tmpfs inside the sandbox even with
+          # --filesystem=host, so put this under the checkout dir instead —
+          # that's a normal host path and is visible inside the sandbox.
+          cat > "$PWD/dbg.sh" << 'EOF'
           #!/bin/bash
           export LD_LIBRARY_PATH=/app/lib:$LD_LIBRARY_PATH
           exec gdb -batch -ex run -ex "bt full" -ex quit --args /app/bin/AnycubicSlicerNext
           EOF
-          chmod +x /tmp/dbg.sh
+          chmod +x "$PWD/dbg.sh"
           dbus-run-session -- xvfb-run -a \
-            flatpak run --command=bash --devel io.github.lucywolf.AnycubicSlicerNext -c /tmp/dbg.sh \
+            flatpak run --command=bash --devel io.github.lucywolf.AnycubicSlicerNext -c "$PWD/dbg.sh" \
             2>&1 | tail -150
         continue-on-error: true
 

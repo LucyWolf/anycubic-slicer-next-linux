@@ -1,0 +1,56 @@
+name: Build Flatpak (feasibility test)
+
+# Manual only for now — this is a proof-of-concept, not yet wired into the
+# daily release like build-release.yml. Run from the Actions tab (or
+# `gh workflow run build-flatpak.yml`) once it's proven to work reliably.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-flatpak:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install flatpak + flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder xvfb gettext-base
+          flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build flatpak bundle
+        run: ./scripts/build-flatpak.sh
+
+      - name: Install the bundle locally
+        run: |
+          flatpak install -y --user --noninteractive dist/AnycubicSlicerNext.flatpak
+
+      - name: Headless smoke test (does it start without the icu/selinux crash?)
+        run: |
+          set +e
+          xvfb-run -a flatpak run --user io.github.lucywolf.AnycubicSlicerNext > run.log 2>&1 &
+          APP_PID=$!
+          sleep 15
+          if kill -0 "$APP_PID" 2>/dev/null; then
+            echo "OK: still running after 15s, killing for cleanup."
+            kill "$APP_PID"
+            echo "smoke_test=pass" >> "$GITHUB_ENV"
+          else
+            echo "Process exited early — see log below."
+            echo "smoke_test=fail" >> "$GITHUB_ENV"
+          fi
+          echo "----- run.log -----"
+          cat run.log
+        continue-on-error: true
+
+      - name: Fail job if smoke test failed
+        if: env.smoke_test != 'pass'
+        run: |
+          echo "Smoke test did not pass — see the 'Headless smoke test' step log above."
+          exit 1
+
+      - name: Upload flatpak bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnycubicSlicerNext-flatpak
+          path: dist/AnycubicSlicerNext.flatpak

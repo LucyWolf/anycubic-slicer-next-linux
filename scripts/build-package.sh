@@ -49,7 +49,9 @@ extract_zst extracted/icu "$(basename "$ICU_URL")"
 extract_zst extracted/selinux "$(basename "$SELINUX_URL")"
 
 PKG="$WORK/AnycubicSlicerNext"
-INSTALL_PATH="/opt/AnycubicSlicerNext"
+# Overridable so build-flatpak.sh can produce an /app-rooted layout instead
+# of the /opt one install-arch.sh/install-deb.sh use.
+INSTALL_PATH="${INSTALL_PATH:-/opt/AnycubicSlicerNext}"
 mkdir -p "$PKG"/bin "$PKG"/lib "$PKG"/share/resources "$PKG"/share/applications
 
 cp extracted/app/usr/bin/AnycubicSlicerNext "$PKG"/bin/
@@ -70,10 +72,10 @@ cp extracted/app/usr/share/applications/AnycubicSlicer.desktop "$PKG"/share/appl
 sed -i "s@/usr/share/AnycubicSlicerNext/resources@${INSTALL_PATH}/share/resources@" "$PKG"/share/applications/AnycubicSlicer.desktop
 sed -i "s@Exec=.*@Exec=${INSTALL_PATH}/AnycubicSlicerNext.sh@" "$PKG"/share/applications/AnycubicSlicer.desktop
 
-cat > "$PKG"/AnycubicSlicerNext.sh << 'WRAPPER'
+cat > "$PKG"/AnycubicSlicerNext.sh << WRAPPER
 #!/bin/bash
-export LD_LIBRARY_PATH=/opt/AnycubicSlicerNext/lib:$LD_LIBRARY_PATH
-exec /opt/AnycubicSlicerNext/bin/AnycubicSlicerNext "$@"
+export LD_LIBRARY_PATH=${INSTALL_PATH}/lib:\$LD_LIBRARY_PATH
+exec ${INSTALL_PATH}/bin/AnycubicSlicerNext "\$@"
 WRAPPER
 chmod +x "$PKG"/AnycubicSlicerNext.sh
 

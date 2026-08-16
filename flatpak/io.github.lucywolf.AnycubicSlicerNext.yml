@@ -1,0 +1,38 @@
+id: io.github.lucywolf.AnycubicSlicerNext
+# runtime-version is filled in by scripts/build-flatpak.sh (envsubst) with
+# whatever org.gnome.Platform version is currently on Flathub — GNOME bumps
+# this yearly, hardcoding it here would go stale.
+runtime: org.gnome.Platform
+runtime-version: "${GNOME_RUNTIME_VERSION}"
+sdk: org.gnome.Sdk
+command: AnycubicSlicerNext.sh
+
+finish-args:
+  # Cloud login + MQTT + printer discovery/camera feed are all network-based.
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  # GPU accel for the 3D viewport, plus USB-serial access for printers that
+  # use direct USB rather than network (same reasoning PrusaSlicer's flatpak
+  # uses --device=all for).
+  - --device=all
+  # Model/G-code files can live anywhere on disk, not just XDG folders.
+  - --filesystem=host
+
+modules:
+  - name: anycubicslicernext
+    buildsystem: simple
+    # The 'work/AnycubicSlicerNext' source dir is produced by
+    # scripts/build-package.sh (run with INSTALL_PATH=/app first) — it
+    # already has the exact bin/lib/share/AnycubicSlicerNext.sh layout and
+    # every baked-in path already points at /app/..., so this is a
+    # straight copy, no further patching needed here.
+    build-commands:
+      - mkdir -p /app/share/applications
+      - cp -a bin lib share AnycubicSlicerNext.sh /app/
+      - mv /app/share/applications/AnycubicSlicer.desktop
+        /app/share/applications/io.github.lucywolf.AnycubicSlicerNext.desktop
+    sources:
+      - type: dir
+        path: ../work/AnycubicSlicerNext

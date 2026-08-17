@@ -10,13 +10,13 @@ cd "$ROOT"
 echo "==> Building /app-rooted package layout (reusing build-package.sh)"
 INSTALL_PATH=/app ./scripts/build-package.sh
 
-echo "==> Resolving current org.gnome.Platform/Sdk version (branch) on Flathub"
-GNOME_RUNTIME_VERSION="$(flatpak remote-ls flathub --columns=application,branch 2>/dev/null \
-  | awk -F'\t' '$1=="org.gnome.Platform"{print $2}' | grep -E '^[0-9]+$' | sort -n | tail -1)"
-if [ -z "$GNOME_RUNTIME_VERSION" ]; then
-  echo "ERROR: could not determine current org.gnome.Platform version from the flathub remote." >&2
-  exit 1
-fi
+# Pinned rather than auto-picking the newest branch on Flathub: the first
+# real-hardware test crashed (SIGSEGV, zero output) against auto-picked //50,
+# which turned out to be a very fresh runtime the test machine didn't even
+# have yet. //48 is a version already installed and in daily use there
+# (other Flatpak apps depend on it), so it's a much better first thing to
+# rule in/out before chasing anything more exotic.
+GNOME_RUNTIME_VERSION="${GNOME_RUNTIME_VERSION:-48}"
 echo "    Using org.gnome.Platform//${GNOME_RUNTIME_VERSION}"
 
 echo "==> Installing runtime + SDK (large download, first run only)"

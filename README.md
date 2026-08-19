@@ -61,3 +61,15 @@ See `scripts/build-package.sh`. In short: extract the official `.deb` +
 `libicu74`/`libselinux1` from Ubuntu's archive, copy the app's libs plus
 those two into one directory, patch the one hardcoded resource path in the
 binary, and wrap it in a launcher script that sets `LD_LIBRARY_PATH`.
+
+## Flatpak (experimental, not working yet)
+
+`flatpak/` and `scripts/build-flatpak.sh` are an in-progress test of
+packaging this as a Flatpak instead of the pacman repack above — the
+missing-library problem itself doesn't reproduce there (confirms the same
+bundling approach carries over), but the app currently crashes (SIGSEGV,
+no error output, not tied to Xvfb/no-GPU or to the runtime version — same
+crash on real hardware and across `org.gnome.Platform//48` and `//50`)
+shortly after startup for a reason not yet identified. Not usable, not
+wired into the regular install/release flow — leave the pacman repack
+above as the supported Arch/CachyOS path until this is sorted out.
